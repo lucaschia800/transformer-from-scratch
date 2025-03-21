@@ -115,8 +115,7 @@ def make_causal_mask(n_tok:int):
     Create a mask matrix that masks future context for the attention.
     :return: A mask matrix which is a tensor of shape (n_tok, n_tok)
     """
-    # Hint: In order for it to run properly later, you'll need to put `.to(DEVICE)` at
-    # the end of your expression for this. This will not be relevant until section 2.2.
+
 
     mask = torch.tril(torch.ones(n_tok, n_tok), diagonal = 0)
     return mask.bool()
