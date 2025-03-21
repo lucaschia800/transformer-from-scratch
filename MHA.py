@@ -32,7 +32,7 @@ def MHA_wrapper(query, key, value, n_heads=1, causal=False):
 
 def init_qkv_proj(n_embd:int):
     """
-    This function is given to you.
+ 
     :return: A tuple of length 3 containing the projections for Q, K, V.
     """
     return (nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd))
@@ -41,11 +41,6 @@ def init_qkv_proj(n_embd:int):
 def self_attention(Q, K, V, n_heads=1, causal=True):
     """
     Self-attention block.
-
-    Note: You will keep coming back to this cell and fill in more of this function
-    after completing each of the following steps! Don't forget to re-run this
-    cell each time you change it. Make sure that once you're done, all the testing
-    cells should work.
 
     :return: A tensor containing the result of the self-attention operation.
     """
