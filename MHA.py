@@ -29,20 +29,6 @@ def MHA_wrapper(query, key, value, n_heads=1, causal=False):
     return out.transpose(0,1)
 
 
-# use cpu for now
-DEVICE = 'cpu'
-
-# make these bigger if you want a stricter test of your code
-part1_n_tok = 10
-part1_n_emb = 6
-
-# generate fixed pseudo-random Q,K,V for testing attn function
-torch.manual_seed(447)
-
-# Initialize random testing Q,K,V
-part1_key = torch.randn(1, part1_n_tok, part1_n_emb)
-part1_value = torch.randn(1, part1_n_tok, part1_n_emb)
-part1_query = torch.randn(1, part1_n_tok, part1_n_emb)
 
 def init_qkv_proj(n_embd:int):
     """
@@ -53,29 +39,38 @@ def init_qkv_proj(n_embd:int):
 
 
 def self_attention(Q, K, V, n_heads=1, causal=True):
+    """
+    Self-attention block.
 
+    Note: You will keep coming back to this cell and fill in more of this function
+    after completing each of the following steps! Don't forget to re-run this
+    cell each time you change it. Make sure that once you're done, all the testing
+    cells should work.
+
+    :return: A tensor containing the result of the self-attention operation.
+    """
     assert Q.shape == K.shape == V.shape
     B, n_tok, n_embd = Q.size()
 
-    # TODO: Step 3 -- split heads.
     if n_heads > 1:
-        raise NotImplementedError  # remove this line when you finish this block of code
+         Q, K, V = split_heads_qkv(Q, K, V, n_heads)
 
-    # Hint: you need two lines here
+
     A = pairwise_similarities(Q, K)
     A = attn_scaled(A, n_embd, n_heads)
 
 
+
     if causal:
         mask = make_causal_mask(n_tok)
-        A = apply_causal_mask(mask, A) # remove this line when you finish this block of code
-
+        A = apply_causal_mask(mask, A) 
 
     A = attn_softmax(A)
     y = compute_outputs(A, V)
 
+
     if n_heads > 1:
-        raise NotImplementedError # remove this line when you finish this block of code
+        y = merge_heads(y)
 
     # output should have the same shape as input
     assert y.shape == (B, n_tok, n_embd)
@@ -168,3 +163,34 @@ def merge_heads(y):
     y = y.permute(0, 2, 1, 3).reshape(B, n_tok, nh * nc)
     return y
     
+
+
+if __name__ == "__main__":
+
+
+    DEVICE = 'cpu'
+
+
+    part1_n_tok = 10
+    part1_n_emb = 6
+
+    # generate fixed pseudo-random Q,K,V for testing attn function
+    torch.manual_seed(447)
+
+    # Initialize random testing Q,K,V
+    part1_key = torch.randn(1, part1_n_tok, part1_n_emb)
+    part1_value = torch.randn(1, part1_n_tok, part1_n_emb)
+    part1_query = torch.randn(1, part1_n_tok, part1_n_emb)
+
+
+
+    # Test the self-attention function
+    out = self_attention(part1_query, part1_key, part1_value, n_heads=1, causal=False)
+    print(out.shape)
+    print(out)
+
+    # Test the MHA_wrapper function
+    out = MHA_wrapper(part1_query, part1_key, part1_value, n_heads=1, causal=False)
+    print(out.shape)
+    print(out)
+    print("All tests passed!")
