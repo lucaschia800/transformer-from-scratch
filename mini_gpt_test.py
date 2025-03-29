@@ -1,5 +1,6 @@
 from mini_gpt_model import GPT
-from mingpt.trainer import Trainer
+from trainer import Trainer
+import torch
 
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
