@@ -1,4 +1,4 @@
-from mingpt.model import GPT
+from mini_gpt_model import GPT
 from mingpt.trainer import Trainer
 
 import matplotlib.pyplot as plt
