@@ -8,7 +8,6 @@ from collections import Counter
 import numpy as np
 
 
-
 with open('1b_benchmark.train.tokens', 'r') as f: lines_train = f.readlines()
 with open('1b_benchmark.dev.tokens', 'r') as f: lines_dev = f.readlines()
 with open('1b_benchmark.test.tokens', 'r') as f: lines_test = f.readlines()
