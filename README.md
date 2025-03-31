@@ -1,3 +1,3 @@
 # MHA-from-scratch
 
-Coding multi headed attention from scratch!!
+Coding a mini-gpt model within pytorch and MHA from scratch
