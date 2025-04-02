@@ -69,9 +69,6 @@ decoded = decode(tokenized, end_at_stop=False, omit_pad=False)
 print(f'{sentence=}\n{tokenized=}\n{decoded=}')
 
 
-# Notice above that the vast majority of sequences have less than 100 tokens.
-# For performance we will thus truncate to 100 tokens.
-
 MAX_LEN = 100
 DEVICE = 'cuda'
 
@@ -102,10 +99,7 @@ model_config.pad_token = tokenizer['<PAD>']
 
 
 model_config.model_type = 'gpt-nano'
-# 'gpt-nano' equivalent to:
-# model_config.n_layer = 3
-# model_config.n_head = 3
-# model_config.n_embd = 48
+
 
 model_config.vocab_size = max(tokenizer.values()) + 1
 
@@ -149,7 +143,7 @@ bar.close()
 
 """ EVALUATION """
 
-sentence = 'Thank you so much Liwei and Taylor for all your help with this !'
+sentence = 'Thank you so much for building this Lucas you are!'
 
 tokens = torch.tensor([tokenize(sentence, pad_to_len=MAX_LEN)], dtype=torch.long)
 X_tokens, y_tokens = tokens[:, :-1], tokens[:, 1:]
@@ -228,8 +222,6 @@ print('perplexity:', np.exp(is_this_loss))
 # Here's an example of generating using the model -- see generate in minGPT's model.py
 
 sentence = ''                         # empty prompt -> sample from model at random
-# sentence = 'unfortunately ,'          # can sample more negative stuff
-# sentence = 'fun fact : did you know'  # AI-generated fun facts
 
 tokens = torch.tensor([tokenize(sentence, include_stop=False)], dtype=torch.long).to(DEVICE)
 
