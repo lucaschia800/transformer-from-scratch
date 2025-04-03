@@ -53,7 +53,7 @@ class Trainer:
         for callback in self.callbacks.get(onevent, []):
             callback(self)
 
-    def run(self, return_attn=False):
+    def run(self):
         model, config = self.model, self.config
 
         # setup the optimizer
@@ -85,10 +85,8 @@ class Trainer:
             x, y = batch
 
             # forward the model
-            if return_attn:
-                logits, self.loss, attn = model(x, y, return_attn=True)
-            else:
-                logits, self.loss = model(x, y)
+
+            logits, self.loss = model(x, y)
 
             # backprop and update the parameters
             model.zero_grad(set_to_none=True)
