@@ -40,16 +40,20 @@ class CausalSelfAttention(nn.Module):
         self.W_Q, self.W_K, self.W_V = config.attn_init_fn(self.n_embd)
         self.attn_fn = config.attn_fn
 
-    def forward(self, x, mask_tokens=None):
+    def forward(self, x, mask_tokens=None, return_attn=False):
         #B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
         Q,K,V = self.W_Q(x), self.W_K(x), self.W_V(x)
-        y = self.attn_fn(Q,K,V, n_heads=self.n_head, causal=True)
+        A, y = self.attn_fn(Q,K,V, n_heads=self.n_head, causal=True, return_attn=return_attn)
         if mask_tokens is not None:
             y[mask_tokens] = 0
 
         # output projection
         y = self.resid_dropout(self.c_proj(y))
-        return y
+
+        if return_attn:
+            return A,y 
+        else:
+            return y
 
 
 class Block(nn.Module):
@@ -69,10 +73,17 @@ class Block(nn.Module):
         m = self.mlp
         self.mlpf = lambda x: m.dropout(m.c_proj(m.act(m.c_fc(x)))) # MLP forward
 
-    def forward(self, x, mask_tokens=None):
-        x = x + self.attn(self.ln_1(x), mask_tokens=mask_tokens)
-        x = x + self.mlpf(self.ln_2(x))
-        return x
+    def forward(self, x, mask_tokens=None, return_attn=False): 
+        if return_attn:
+            A, attn_out = self.attn(self.ln_1(x), mask_tokens=mask_tokens, return_attn=True)
+            x = x + attn_out
+            x = x + self.mlpf(self.ln_2(x))
+            return A, x
+        else:
+            x = x + self.attn(self.ln_1(x), mask_tokens=mask_tokens)
+            x = x + self.mlpf(self.ln_2(x))
+            return x
+
 
 class GPT(nn.Module):
     """ GPT Language Model """
@@ -203,7 +214,7 @@ class GPT(nn.Module):
         optimizer = torch.optim.AdamW(optim_groups, lr=train_config.learning_rate, betas=train_config.betas)
         return optimizer
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None, return_attn=False):
         device = idx.device
         b, t = idx.size()
         assert t <= self.block_size, f"Cannot forward sequence of length {t}, block size is only {self.block_size}"
@@ -215,8 +226,13 @@ class GPT(nn.Module):
         tok_emb = self.transformer.wte(idx) # token embeddings of shape (b, t, n_embd)
         pos_emb = self.transformer.wpe(pos) # position embeddings of shape (1, t, n_embd)
         x = self.transformer.drop(tok_emb + pos_emb)
+        attn_weights = [] if return_attn else None
         for block in self.transformer.h:
-            x = block(x, mask_tokens=mask_tokens)
+            if return_attn:
+                A, x = block(x, mask_tokens=mask_tokens, return_attn=True)
+                attn_weights.append(A)
+            else:
+                x = block(x, mask_tokens=mask_tokens)
         x = self.transformer.ln_f(x)
         logits = self.lm_head(x)
 
@@ -225,7 +241,11 @@ class GPT(nn.Module):
         if targets is not None:
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=self.pad_token)
 
-        return logits, loss
+        if return_attn:
+            return logits, loss, attn_weights
+        else:
+            return logits, loss
+
 
     @torch.no_grad()
     def generate(self, idx, max_new_tokens, temperature=1.0, do_sample=False, top_k=None):

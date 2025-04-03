@@ -38,7 +38,7 @@ def init_qkv_proj(n_embd:int):
     return (nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd))
 
 
-def self_attention(Q, K, V, n_heads=1, causal=True):
+def self_attention(Q, K, V, n_heads=1, causal=True, return_attn=False):
     """
     Self-attention block.
 
@@ -69,7 +69,10 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
 
     # output should have the same shape as input
     assert y.shape == (B, n_tok, n_embd)
-    return y
+    if return_attn:
+        return y, A
+    else:
+        return y
 
 
 def pairwise_similarities(Q, K):
