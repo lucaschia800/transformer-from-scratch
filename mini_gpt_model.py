@@ -43,17 +43,14 @@ class CausalSelfAttention(nn.Module):
     def forward(self, x, mask_tokens=None, return_attn=False):
         #B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
         Q,K,V = self.W_Q(x), self.W_K(x), self.W_V(x)
-        A, y = self.attn_fn(Q,K,V, n_heads=self.n_head, causal=True, return_attn=return_attn)
+        y, A = self.attn_fn(Q,K,V, n_heads=self.n_head, causal=True, return_attn=return_attn)
         if mask_tokens is not None:
             y[mask_tokens] = 0
 
         # output projection
         y = self.resid_dropout(self.c_proj(y))
 
-        if return_attn:
-            return A,y 
-        else:
-            return y
+        return y, A
 
 
 class Block(nn.Module):
@@ -74,15 +71,12 @@ class Block(nn.Module):
         self.mlpf = lambda x: m.dropout(m.c_proj(m.act(m.c_fc(x)))) # MLP forward
 
     def forward(self, x, mask_tokens=None, return_attn=False): 
-        if return_attn:
-            A, attn_out = self.attn(self.ln_1(x), mask_tokens=mask_tokens, return_attn=True)
-            x = x + attn_out
-            x = x + self.mlpf(self.ln_2(x))
-            return A, x
-        else:
-            x = x + self.attn(self.ln_1(x), mask_tokens=mask_tokens)
-            x = x + self.mlpf(self.ln_2(x))
-            return x
+
+        attn_out, A = self.attn(self.ln_1(x), mask_tokens=mask_tokens, return_attn=True)
+        x = x + attn_out
+        x = x + self.mlpf(self.ln_2(x))
+        return x, A
+
 
 
 class GPT(nn.Module):
@@ -224,13 +218,11 @@ class GPT(nn.Module):
         tok_emb = self.transformer.wte(idx) # token embeddings of shape (b, t, n_embd)
         pos_emb = self.transformer.wpe(pos) # position embeddings of shape (1, t, n_embd)
         x = self.transformer.drop(tok_emb + pos_emb)
-        attn_weights = [] if return_attn else None
+        attn_weights = []
         for block in self.transformer.h:
-            if return_attn:
-                A, x = block(x, mask_tokens=mask_tokens, return_attn=True)
-                attn_weights.append(A)
-            else:
-                x = block(x, mask_tokens=mask_tokens)
+            x, A = block(x, mask_tokens=mask_tokens, return_attn=True)
+            attn_weights.append(A)
+ 
         x = self.transformer.ln_f(x)
         logits = self.lm_head(x)
 
@@ -239,10 +231,7 @@ class GPT(nn.Module):
         if targets is not None:
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=self.pad_token)
 
-        if return_attn:
-            return logits, loss, attn_weights
-        else:
-            return logits, loss
+        return logits, loss, attn_weights
 
 
     @torch.no_grad()
