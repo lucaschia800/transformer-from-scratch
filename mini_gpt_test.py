@@ -7,6 +7,8 @@ from tqdm.auto import tqdm
 from collections import Counter
 import numpy as np
 
+from MHA import init_qkv_proj, self_attention
+
 
 with open('1b_benchmark.train.tokens', 'r') as f: lines_train = f.readlines()
 with open('1b_benchmark.dev.tokens', 'r') as f: lines_dev = f.readlines()
