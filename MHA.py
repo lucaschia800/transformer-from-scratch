@@ -96,7 +96,7 @@ def attn_scaled(A, n_embd:float, n_heads:float):
     return A_scaled
 
 def attn_softmax(A):
-    """
+    """ 
     Normalize the scaled raw attention scores with softmax.
     :return: Normalized attention scores, A' = softmax(A).
     """
