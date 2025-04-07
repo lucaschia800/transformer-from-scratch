@@ -38,8 +38,6 @@ sorted_tokens = sorted(token_counts.items(), key=lambda x: x[1], reverse=True)
 print('unique_tokens:', len(token_counts))
 print('unique_tokens, count>=3:', len([t for t in sorted_tokens if t[1] >= 3]))
 
-# make tokenizer for all tokens with count >= 3
-# note that our tokenizer ends up including START and STOP tokens too
 tokenizer = {t[0]: i for i, t in enumerate(sorted_tokens) if t[1] >= 3}
 
 def pad_to_length(tokens, max_len, tokenizer=tokenizer):
@@ -90,7 +88,6 @@ data_train.shape, data_val.shape
 train_dataset = torch.utils.data.TensorDataset(data_train[:, :-1], data_train[:, 1:])
 val_dataset = torch.utils.data.TensorDataset(data_val[:, :-1], data_val[:, 1:])
 
-# example X,Y pair from train dataset -- 2 is <START>, 3 is <STOP>
 train_dataset[447]
 
 
@@ -120,7 +117,6 @@ train_config = Trainer.get_default_config()
 train_config.device = DEVICE
 train_config.num_workers = 2
 
-# We didn't tune the hyperparameters at all, feel free to change
 train_config.learning_rate = 5e-4
 train_config.batch_size = 32
 train_config.max_iters = len(train_dataset) // train_config.batch_size  # train for 1 epoch
