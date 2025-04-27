@@ -135,9 +135,7 @@ def apply_causal_mask(mask, A):
 
 
 def split_heads_qkv(Q, K, V, n_heads:int):
-    """
-    Provided as a utility -- you can choose to not use it if you'd like.
-    """
+   
     return (split_heads(Q, n_heads), split_heads(K, n_heads), split_heads(V, n_heads))
 
 def split_heads(x, n_heads:int):
